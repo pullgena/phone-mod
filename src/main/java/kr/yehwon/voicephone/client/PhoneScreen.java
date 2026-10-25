@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 
 /** Display only the actions relevant to the current call state. */
 public final class PhoneScreen extends Screen {
+    static PhoneScreen visible;
     private EditBox playerName;
 
     public PhoneScreen() {
@@ -18,6 +19,7 @@ public final class PhoneScreen extends Screen {
 
     @Override
     protected void init() {
+        visible = this;
         int x = width / 2;
         int y = height / 2;
         String state = VoicePhoneClient.state;
@@ -47,6 +49,12 @@ public final class PhoneScreen extends Screen {
                 }).bounds(x - 82, y + 15, 164, 22).build());
             }
         }
+    }
+
+    @Override
+    public void onClose() {
+        if (visible == this) visible = null;
+        super.onClose();
     }
 
     private static void send(String action, String target) {
