@@ -50,7 +50,11 @@ public final class PhoneScreen extends Screen {
 
     @Override
     public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
-        // Keep the actual Minecraft world visible behind the phone controls.
+        // Apply Minecraft 26.3's native menu blur to the scene behind the phone UI.
+        // Unlike a full-screen gradient, this leaves the world recognizable.
+        // Respects the player's Menu Background Blurriness setting.
+        this.extractBlurredBackground(g);
+        g.fill(0, 0, width, height, 0x18000000);
     }
 
     static void send(String action, String target) {

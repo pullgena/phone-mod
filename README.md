@@ -95,3 +95,10 @@
 - Phone right-click now explicitly opens the phone UI in idle, outgoing, and active states. During an active call, re-opening the phone provides the end-call control.
 - The normal state-change path retains the compact in-game HUD after a call connects and the existing incoming-call popup behavior.
 - The server and client should both install the new JAR and restart. Build success alone does not confirm that GUI behavior was tested in-game.
+
+## v0.5.2: Blurred dialing background
+
+- When opening the PhoneScreen to dial, the world behind the UI is softly blurred using Minecraft 26.3's native `Screen.extractBlurredBackground` effect.
+- The phone UI and buttons remain sharp. The full-screen solid or gradient background does not return; a subtle translucent shade improves text legibility.
+- Blur follows the player's Minecraft 'Menu Background Blurriness' setting. With blur set to zero, only the subtle transparent shade is displayed.
+- The incoming-call popup and ongoing call HUD retain their original appearance.
