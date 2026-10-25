@@ -50,9 +50,7 @@ public final class PhoneScreen extends Screen {
 
     @Override
     public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
-        g.fillGradient(0, 0, width, height, 0xFF101D32, 0xFF06101B);
-        g.fill(0, 0, width, 42, 0xFF152C46);
-        g.fill(0, height - 53, width, height, 0xFF0B1524);
+        // Keep the actual Minecraft world visible behind the phone controls.
     }
 
     static void send(String action, String target) {
@@ -76,7 +74,7 @@ public final class PhoneScreen extends Screen {
             g.centeredText(font, VoicePhoneClient.peer, x, y - 55, 0xFFA2C9F2);
         }
         if (!VoicePhoneClient.detail.isBlank()) {
-            g.centeredText(font, VoicePhoneClient.detail, x, y + 82, 0xFFC6D2DF);
+            g.centeredText(font, VoicePhoneClient.detail, x, y + 82, ("error".equals(VoicePhoneClient.state) || VoicePhoneClient.detail.contains("실패") || VoicePhoneClient.detail.contains("없습니다") || VoicePhoneClient.detail.contains("못했습니다") ? 0xFFFF5555 : 0xFFC6D2DF));
         }
     }
 }
