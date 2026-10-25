@@ -18,7 +18,7 @@ public final class VoicePhoneClient implements ClientModInitializer {
             detail = payload.detail();
             Minecraft mc = context.client();
             // Update visible controls immediately when an incoming call is answered, rejected or ended.
-            if (payload.open() || mc.screen instanceof PhoneScreen) {
+            if (payload.open() || mc.getScreen() instanceof PhoneScreen) {
                 mc.gui.setScreen(new PhoneScreen());
             }
         });
