@@ -115,7 +115,7 @@ public final class PhoneManager {
         try {
             Group group = voiceApi.groupBuilder()
                     .setName("Phone-" + caller.getPlainTextName())
-                    .setType(Group.Type.ISOLATED)
+                    .setType(Group.Type.OPEN)
                     .setHidden(true)
                     .setPersistent(false)
                     .build();
