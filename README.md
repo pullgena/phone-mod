@@ -88,3 +88,10 @@
 - 그룹의 사용자는 주변 플레이어 음성을 듣고, 주변 플레이어도 그룹 구성원의 근접 음성을 들을 수 있습니다.
 - 멀리 떨어진 통화 상대의 음성을 휴대폰 스피커처럼 주변에 재송출하는 기능과는 별개입니다.
 - 서버 및 클라이언트 모두 동일한 v0.4.1 JAR로 업데이트한 뒤 재시작해야 합니다.
+
+## v0.5.1: Fix phone screen not opening
+
+- Fixed the client ignoring the `open=true` network payload for an idle phone when right-clicking the item.
+- Phone right-click now explicitly opens the phone UI in idle, outgoing, and active states. During an active call, re-opening the phone provides the end-call control.
+- The normal state-change path retains the compact in-game HUD after a call connects and the existing incoming-call popup behavior.
+- The server and client should both install the new JAR and restart. Build success alone does not confirm that GUI behavior was tested in-game.

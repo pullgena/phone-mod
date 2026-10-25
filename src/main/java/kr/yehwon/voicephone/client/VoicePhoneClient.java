@@ -46,24 +46,49 @@ public final class VoicePhoneClient implements ClientModInitializer {
             }
             if("active".equals(state) && !"active".equals(previous))connectedAt=System.currentTimeMillis();
 
-            if("active".equals(state)) {
-                // Close phone screens on both ends: the call remains active in HUD only.
-                if(mc.gui.screen() instanceof PhoneScreen || mc.gui.screen() instanceof IncomingCallPopup)
+            // A direct phone-item right-click is an explicit request to open its UI.
+            // This flag must be handled in every state, including the default "idle" state.
+            if (payload.open()) {
+                if ("incoming".equals(state) && !holdingPhone(mc)) {
+                    mc.gui.setScreen(new IncomingCallPopup());
+                } else {
+                    mc.gui.setScreen(new PhoneScreen());
+                }
+                return;
+            }
+
+            // State-change packets do not always imply opening a new screen.
+            // After connecting, restore gameplay and use the compact call HUD.
+            if ("active".equals(state)) {
+                if (mc.gui.screen() instanceof PhoneScreen || mc.gui.screen() instanceof IncomingCallPopup) {
                     mc.gui.setScreen(null);
+                }
                 return;
             }
-            if("incoming".equals(state)) {
-                if(holdingPhone(mc))mc.gui.setScreen(new PhoneScreen());
-                else mc.gui.setScreen(new IncomingCallPopup());
+
+            if ("incoming".equals(state)) {
+                mc.gui.setScreen(holdingPhone(mc) ? new PhoneScreen() : new IncomingCallPopup());
                 return;
             }
-            if("outgoing".equals(state)) {
-                if(mc.gui.screen() instanceof PhoneScreen || payload.open())mc.gui.setScreen(new PhoneScreen());
+
+            if ("outgoing".equals(state)) {
+                if (mc.gui.screen() instanceof PhoneScreen) {
+                    mc.gui.setScreen(new PhoneScreen());
+                }
                 return;
             }
-            if(mc.gui.screen() instanceof IncomingCallPopup)mc.gui.setScreen(null);
-            else if(mc.gui.screen() instanceof PhoneScreen && !"error".equals(state)) mc.gui.setScreen(null);
-            else if("error".equals(state))mc.gui.setScreen(new PhoneScreen());
+
+            if ("error".equals(state)) {
+                // Error details are displayed in red by PhoneScreen.
+                mc.gui.setScreen(new PhoneScreen());
+                return;
+            }
+
+            // A completed or cancelled call should dismiss only our own UI.
+            if ("idle".equals(state)
+                    && (mc.gui.screen() instanceof PhoneScreen || mc.gui.screen() instanceof IncomingCallPopup)) {
+                mc.gui.setScreen(null);
+            }
         });
     }
 
