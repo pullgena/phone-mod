@@ -3,6 +3,8 @@ package kr.yehwon.voicephone;
 import kr.yehwon.voicephone.net.PhoneActionPayload;
 import kr.yehwon.voicephone.net.PhoneStatePayload;
 import net.fabricmc.api.ModInitializer;
+import kr.yehwon.voicephone.update.PhoneUpdater;
+import kr.yehwon.voicephone.update.PhoneUpdateCommands;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -23,6 +25,8 @@ public final class VoicePhone implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        PhoneUpdateCommands.register();
+        PhoneUpdater.start();
         PayloadTypeRegistry.serverboundPlay().register(PhoneActionPayload.TYPE, PhoneActionPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PhoneStatePayload.TYPE, PhoneStatePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PhoneActionPayload.TYPE, (payload, context) ->
