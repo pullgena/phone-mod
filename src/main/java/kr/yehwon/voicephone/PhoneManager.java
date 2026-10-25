@@ -51,7 +51,7 @@ public final class PhoneManager {
     }
 
     public static void handle(ServerPlayer sender, MinecraftServer server, PhoneActionPayload request) {
-        if (!holding(sender)) {
+        if ("call".equals(request.action()) && !holding(sender)) {
             notify(sender, "error", "", "휴대폰을 손에 들어주세요", false);
             return;
         }
@@ -73,8 +73,8 @@ public final class PhoneManager {
             return;
         }
         ServerPlayer target = server.getPlayerList().getPlayerByName(playerName);
-        if (target == null || target.getUUID().equals(sender.getUUID()) || !holding(target)) {
-            notify(sender, "error", "", "상대가 접속하지 않았거나 휴대폰을 들고 있지 않습니다", false);
+        if (target == null || target.getUUID().equals(sender.getUUID()) || !hasPhone(target)) {
+            notify(sender, "error", "", "상대가 접속하지 않았거나 휴대폰을 가지고 있지 않습니다", false);
             return;
         }
         if (SESSIONS.containsKey(target.getUUID())) {
@@ -103,6 +103,10 @@ public final class PhoneManager {
             return;
         }
         ServerPlayer caller = server.getPlayerList().getPlayer(session.caller);
+        if (!hasPhone(receiver)) {
+            finish(session, server, "휴대폰이 인벤토리에 없습니다");
+            return;
+        }
         if (caller == null || !holding(caller) || !available(caller) || !available(receiver)
                 || inGroup(caller) || inGroup(receiver)) {
             finish(session, server, "연결할 수 없는 전화입니다");
@@ -169,7 +173,7 @@ public final class PhoneManager {
         for (Call c : unique) {
             ServerPlayer a = server.getPlayerList().getPlayer(c.caller);
             ServerPlayer b = server.getPlayerList().getPlayer(c.callee);
-            if (a == null || b == null || !holding(a) || !holding(b)) {
+            if (a == null || b == null || !holding(a) || !hasPhone(b)) {
                 finish(c, server, "휴대폰을 손에서 내려놓았습니다");
             } else if (!available(a) || !available(b)) {
                 finish(c, server, "보이스챗 연결이 끊어졌습니다");
@@ -196,6 +200,11 @@ public final class PhoneManager {
     private static boolean inSameGroup(ServerPlayer player, Group group) {
         VoicechatConnection conn = voiceApi.getConnectionOf(player.getUUID());
         return conn != null && conn.getGroup() != null && conn.getGroup().getId().equals(group.getId());
+    }
+
+    /** The callee can answer with the phone in their inventory, without holding it. */
+    private static boolean hasPhone(ServerPlayer player) {
+        return holding(player) || player.getInventory().contains(stack -> stack.is(VoicePhone.PHONE));
     }
 
     private static boolean holding(ServerPlayer player) {
