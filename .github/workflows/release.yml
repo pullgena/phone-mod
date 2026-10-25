@@ -1,0 +1,42 @@
+name: Publish Phone Mod Release
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+      - name: Validate version
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^mod_version=//p' gradle.properties)
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+      - name: Build release
+        run: gradle clean build --no-daemon
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir release-assets
+          for f in build/libs/voicephone-fabric-26.3-*.jar; do
+            case "$f" in *-sources.jar) continue;; esac
+            cp "$f" release-assets/
+            (cd release-assets && sha256sum "$(basename "$f")" > "$(basename "$f").sha256")
+          done
+      - name: Upload release files
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          overwrite_files: true
+          fail_on_unmatched_files: true
