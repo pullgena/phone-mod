@@ -1,0 +1,41 @@
+name: Build Fabric phone mod
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Restore phone mod project
+        shell: bash
+        run: |
+          base64 --decode .bootstrap/source.tar.xz.b64 | tar -xJf -
+          test -f build.gradle
+          test -f src/main/resources/fabric.mod.json
+      - name: Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Install Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+      - name: Build mod
+        run: gradle clean build --stacktrace --no-daemon
+      - name: Upload mod JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voicephone-fabric-26.3
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+          if-no-files-found: error
