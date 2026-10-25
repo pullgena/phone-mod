@@ -45,7 +45,7 @@ public final class PhoneManager {
         } else {
             boolean incoming = !call.active && call.callee.equals(player.getUUID());
             String state = call.active ? "active" : (incoming ? "incoming" : "outgoing");
-            ServerPlayer other = player.getServer().getPlayerList().getPlayer(call.other(player.getUUID()));
+            ServerPlayer other = player.level().getServer().getPlayerList().getPlayer(call.other(player.getUUID()));
             notify(player, state, other == null ? "?" : other.getPlainTextName(), "", true);
         }
     }
