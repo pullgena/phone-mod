@@ -81,13 +81,27 @@ public final class PhoneUpdater {
     }
    }
    Files.move(temporary,staged,StandardCopyOption.REPLACE_EXISTING);
-   Path script=folder.resolve("update-"+latest+(System.getProperty("os.name").toLowerCase().contains("win")?".bat":".sh"));
-   if(System.getProperty("os.name").toLowerCase().contains("win")){
-    Files.writeString(script,"@echo off\r\n:retry\r\nmove /Y \""+old+"\" \""+folder.resolve("backup-"+current+".jar")+"\" >nul 2>&1\r\nif errorlevel 1 (timeout /t 2 /nobreak >nul & goto retry)\r\nmove /Y \""+staged+"\" \""+old.getParent().resolve(name)+"\" >nul\r\n");
-   }else{
-    Files.writeString(script,"#!/bin/sh\nwhile ! mv '"+old+"' '"+folder.resolve("backup-"+current+".jar")+"' 2>/dev/null; do sleep 2; done\nmv '"+staged+"' '"+old.getParent().resolve(name)+"'\n");
+   Path helper=folder.resolve("updater-agent.jar");
+   java.util.jar.Manifest mf=new java.util.jar.Manifest();
+   mf.getMainAttributes().put(java.util.jar.Attributes.Name.MANIFEST_VERSION,"1.0");
+   mf.getMainAttributes().put(java.util.jar.Attributes.Name.MAIN_CLASS,UpdaterAgent.class.getName());
+   String cls="/"+UpdaterAgent.class.getName().replace('.','/')+".class";
+   try(InputStream stream=UpdaterAgent.class.getResourceAsStream(cls)){
+    if(stream==null)throw new IOException("Updater helper class missing");
+    try(java.util.jar.JarOutputStream out=new java.util.jar.JarOutputStream(Files.newOutputStream(helper),mf)){
+     out.putNextEntry(new java.util.jar.JarEntry(cls.substring(1)));
+     stream.transferTo(out);out.closeEntry();
+    }
    }
-   message="v"+latest+" 다운로드 완료. config/voicephone-updates의 갱신 스크립트를 실행하고 Minecraft를 종료한 후 재시작하세요.";
+   String java=Path.of(System.getProperty("java.home"),"bin",
+       System.getProperty("os.name","").toLowerCase(Locale.ROOT).contains("win")?"javaw.exe":"java").toString();
+   new ProcessBuilder(java,"-jar",helper.toString(),
+       String.valueOf(ProcessHandle.current().pid()),old.toString(),staged.toString(),
+       old.getParent().resolve(name).toString(),folder.resolve("backup-"+current+".jar").toString())
+       .redirectErrorStream(true)
+       .redirectOutput(ProcessBuilder.Redirect.appendTo(folder.resolve("updater.log").toFile()))
+       .start();
+   message="v"+latest+" 다운로드 완료. Minecraft 종료 후 자동 교체, 다음 실행부터 적용됩니다.";
   }finally{Files.deleteIfExists(temporary);}
  }
 }
