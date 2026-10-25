@@ -16,7 +16,9 @@ jobs:
       - name: Restore phone mod project
         shell: bash
         run: |
-          base64 --decode .bootstrap/source.tar.xz.b64 | tar -xJf -
+          if [ ! -f build.gradle ]; then
+            base64 --decode .bootstrap/source.tar.xz.b64 | tar -xJf -
+          fi
           test -f build.gradle
           test -f src/main/resources/fabric.mod.json
       - name: Java 25
