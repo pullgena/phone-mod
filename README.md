@@ -102,3 +102,10 @@
 - The phone UI and buttons remain sharp. The full-screen solid or gradient background does not return; a subtle translucent shade improves text legibility.
 - Blur follows the player's Minecraft 'Menu Background Blurriness' setting. With blur set to zero, only the subtle transparent shade is displayed.
 - The incoming-call popup and ongoing call HUD retain their original appearance.
+
+## v0.6.0: Cohesive phone icon and smooth dialer
+
+- Redesigned the handheld phone icon as a 32x32 transparent pixel-art smartphone with subdued slate/sea-glass tones and a handset mark. It continues using the existing `voicephone:item/phone` model and item ID.
+- Refined the dialing UI into a compact, translucent slate card with muted mint accents and consistent buttons and labels.
+- Added a 260ms ease-out entrance: card/text fade in and move gently into place; widgets fade/slide in and accept input after the entry animation.
+- Retained Minecraft's native menu blur, and preserved the existing networking, call states, open voice group, popup, HUD, commands and update system.
