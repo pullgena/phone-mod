@@ -2,6 +2,7 @@ package kr.yehwon.voicephone.update;
 
 import com.google.gson.*;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.metadata.ModOrigin;
 import org.slf4j.LoggerFactory;
 import java.io.*;
@@ -20,7 +21,9 @@ public final class PhoneUpdater {
  private static final String API="https://api.github.com/repos/pullgena/phone-mod/releases/latest";
  private static final HttpClient HTTP=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).followRedirects(HttpClient.Redirect.NORMAL).build();
  private static final ExecutorService EXEC=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"VoicePhone-updater");t.setDaemon(true);return t;});
- private static final AtomicBoolean RUNNING=new AtomicBoolean(),STARTED=new AtomicBoolean();
+ private static final AtomicBoolean RUNNING=new AtomicBoolean(),STARTED=new AtomicBoolean(),PENDING=new AtomicBoolean();
+ private record ServerUpdate(Path original, Path staged, Path backup, String version) {}
+ private static volatile ServerUpdate pendingServer;
  private static volatile String message="업데이트 확인 전";
  private PhoneUpdater(){}
  public static String status(){return message;}
@@ -34,10 +37,45 @@ public final class PhoneUpdater {
   }
  }
  public static boolean checkNow(){
-  if(!RUNNING.compareAndSet(false,true))return false;
+  if(PENDING.get()||!RUNNING.compareAndSet(false,true))return false;
   EXEC.execute(()->{try{check();}catch(Exception e){message="업데이트 실패: "+e.getMessage();LoggerFactory.getLogger("voicephone-updater").warn(message,e);}finally{RUNNING.set(false);}});
   return true;
  }
+ /**
+  * Fabric dedicated-server shutdown hook. Runs after the server worlds are closed.
+  * Replaces the installed JAR in-place to avoid leaving duplicate mod JARs.
+  * Failure restores the old version; backups are kept outside mods/.
+  */
+ public static void applyOnDedicatedServerStop(){
+  if(FabricLoader.getInstance().getEnvironmentType()!=EnvType.SERVER)return;
+  ServerUpdate update=pendingServer;
+  if(update==null)return;
+  if(RUNNING.get()){
+   LoggerFactory.getLogger("voicephone-updater").warn("Server stopped during download; skipping update");
+   return;
+  }
+  try{
+   if(!Files.isRegularFile(update.original())||!Files.isRegularFile(update.staged()))
+    throw new IOException("Original or staged JAR missing");
+   Files.move(update.original(),update.backup(),StandardCopyOption.REPLACE_EXISTING);
+   try{
+    Files.move(update.staged(),update.original(),StandardCopyOption.REPLACE_EXISTING);
+   }catch(IOException e){
+    try{Files.move(update.backup(),update.original(),StandardCopyOption.REPLACE_EXISTING);}
+    catch(IOException restoreFailure){e.addSuppressed(restoreFailure);}
+    throw e;
+   }
+   message="v"+update.version()+" 설치 완료. 다음 서버 실행부터 적용됩니다.";
+   LoggerFactory.getLogger("voicephone-updater").info(message);
+  }catch(IOException e){
+   message="서버 업데이트 설치 실패(기존 파일 확인 필요): "+e.getMessage();
+   LoggerFactory.getLogger("voicephone-updater").error(message,e);
+  }finally{
+   pendingServer=null;
+   PENDING.set(false);
+  }
+ }
+
  private static void check()throws Exception{
   var mod=FabricLoader.getInstance().getModContainer("voicephone").orElseThrow();
   String current=mod.getMetadata().getVersion().getFriendlyString();
@@ -81,6 +119,15 @@ public final class PhoneUpdater {
     }
    }
    Files.move(temporary,staged,StandardCopyOption.REPLACE_EXISTING);
+   // Dedicated servers, including Pterodactyl containers, apply updates inside the JVM
+   // when the server stops. No child process needs to survive Docker shutdown.
+   if(FabricLoader.getInstance().getEnvironmentType()==EnvType.SERVER){
+    pendingServer=new ServerUpdate(old,staged,folder.resolve("backup-"+current+".jar"),latest);
+    PENDING.set(true);
+    message="v"+latest+" 다운로드/검증 완료. 서버를 정상 종료한 뒤 다시 시작하면 적용됩니다.";
+    LoggerFactory.getLogger("voicephone-updater").info(message);
+    return;
+   }
    Path helper=folder.resolve("updater-agent.jar");
    java.util.jar.Manifest mf=new java.util.jar.Manifest();
    mf.getMainAttributes().put(java.util.jar.Attributes.Name.MANIFEST_VERSION,"1.0");
@@ -97,10 +144,11 @@ public final class PhoneUpdater {
        System.getProperty("os.name","").toLowerCase(Locale.ROOT).contains("win")?"javaw.exe":"java").toString();
    new ProcessBuilder(java,"-jar",helper.toString(),
        String.valueOf(ProcessHandle.current().pid()),old.toString(),staged.toString(),
-       old.getParent().resolve(name).toString(),folder.resolve("backup-"+current+".jar").toString())
+       old.toString(),folder.resolve("backup-"+current+".jar").toString())
        .redirectErrorStream(true)
        .redirectOutput(ProcessBuilder.Redirect.appendTo(folder.resolve("updater.log").toFile()))
        .start();
+   PENDING.set(true);
    message="v"+latest+" 다운로드 완료. Minecraft 종료 후 자동 교체, 다음 실행부터 적용됩니다.";
   }finally{Files.deleteIfExists(temporary);}
  }

@@ -1,6 +1,6 @@
-# Voice Phone — Fabric 26.3 (prototype 0.1.0)
+# Voice Phone — Fabric 26.3 (prototype 0.3.0)
 
-> ⚠️ **소스 코드 프로토타입입니다. 빌드/실행 테스트를 완료한 출시용 JAR가 아닙니다.**
+> ⚠️ **개발 중인 버전으로 실제 멀티플레이 통화 및 릴리스 업데이트 테스트가 필요합니다.**
 >
 > 이 아카이브에는 마인크래프트/Gradle 의존성 파일이나 완성 JAR가 포함되지 않습니다.
 
@@ -30,7 +30,7 @@
 
 1. JDK 25와 Gradle 9.7.1을 설치한 후 프로젝트 폴더를 터미널에서 엽니다.
 2. `gradle clean build --no-daemon` 실행.
-3. 성공하면 `build/libs/voicephone-fabric-26.3-0.1.0.jar`를 사용합니다. `-sources.jar`는 사용하지 않습니다.
+3. 성공하면 `build/libs/voicephone-fabric-26.3-0.3.0.jar`를 사용합니다. `-sources.jar`는 사용하지 않습니다.
 4. 또는 본 프로젝트를 GitHub 저장소에 올리면 **Actions → Build Fabric phone mod** 워크플로가 빌드를 시도하고 결과 JAR를 Artifacts에 업로드합니다.
 
 인터넷 연결이 필요합니다. 최초 빌드 시 Gradle/Loom/Minecraft 파일을 다운로드합니다.
@@ -58,3 +58,16 @@
 - Fabric 개발 문서: https://docs.fabricmc.net/
 - Simple Voice Chat API: https://dev.modrepo.de/minecraft/voicechat/api/getting_started
 - Simple Voice Chat GitHub 26.3 API: https://github.com/henkelmax/simple-voice-chat/tree/26.3/api
+
+## UI와 자동 업데이트 (v0.3.0)
+
+- 대기 상태: 닉네임 입력 및 **전화 걸기**만 표시
+- 수신 상태: **받기/거절**만 표시
+- 발신 대기: **전화 취소**만 표시
+- 통화 중: **통화 종료**만 표시
+- 통화 상태가 바뀌면 UI를 즉시 새로고침, ESC로 닫기
+- OP/콘솔: `/phoneupdate`, `/phoneupdate status`, `/phoneupdate check`
+- GitHub Release(vX.Y.Z)에 호환 JAR 업로드 시 주기적으로 확인하며 SHA-256 검증 후 다운로드
+- 전용 Fabric 서버(Pterodactyl 포함)는 서버가 **정상 종료될 때** JAR를 교체하고 다음 시작부터 적용합니다. 서버 강제 종료/호스팅의 파일 쓰기 제한에서는 적용되지 않을 수 있습니다.
+- PC 클라이언트는 Minecraft 종료 후 보조 프로세스를 통해 교체를 시도합니다. 서버와 클라이언트 버전이 일치해야 통신 오류를 피할 수 있습니다.
+- 릴리스 업데이트 기능이 없던 구버전에서의 최초 업그레이드는 수동으로 필요합니다.

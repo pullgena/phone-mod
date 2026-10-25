@@ -4,13 +4,18 @@
   "version": "${version}",
   "name": "Voice Phone",
   "description": "Private phone calls over Simple Voice Chat for Minecraft 26.3",
-  "authors": ["YEON"],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
-    "main": ["kr.yehwon.voicephone.VoicePhone"],
-    "client": ["kr.yehwon.voicephone.client.VoicePhoneClient"],
-    "voicechat": ["kr.yehwon.voicephone.PhoneVoicePlugin"]
+    "main": [
+      "kr.yehwon.voicephone.VoicePhone"
+    ],
+    "client": [
+      "kr.yehwon.voicephone.client.VoicePhoneClient"
+    ],
+    "voicechat": [
+      "kr.yehwon.voicephone.PhoneVoicePlugin"
+    ]
   },
   "depends": {
     "minecraft": "26.3",

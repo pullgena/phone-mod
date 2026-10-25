@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -27,6 +28,7 @@ public final class VoicePhone implements ModInitializer {
     public void onInitialize() {
         PhoneUpdateCommands.register();
         PhoneUpdater.start();
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> PhoneUpdater.applyOnDedicatedServerStop());
         PayloadTypeRegistry.serverboundPlay().register(PhoneActionPayload.TYPE, PhoneActionPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PhoneStatePayload.TYPE, PhoneStatePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PhoneActionPayload.TYPE, (payload, context) ->
